@@ -1,0 +1,32 @@
+name: Build Microservices CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ✅ Checkout Code
+        uses: actions/checkout@v3
+
+      - name: ✅ Build Auth Service
+        run: docker build -t finin-auth ./services/auth-service
+
+      - name: ✅ Build User Service
+        run: docker build -t finin-user ./services/user-service
+
+      - name: ✅ Build Portfolio Service
+        run: docker build -t finin-portfolio ./services/portfolio-service
+
+      - name: ✅ Build Notification Service
+        run: docker build -t finin-notification ./services/notification-service
+
+      - name: ✅ Build API Gateway
+        run: docker build -t finin-gateway ./services/api-gateway
+
+      - name: ✅ Build Frontend
+        run: docker build -t finin-frontend ./frontend
