@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: finin-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: finin
+    ports:
+      - "5432:5432"
+
+  auth:
+    build: ./services/auth-service
+    container_name: finin-auth
+    depends_on:
+      - postgres
+    ports:
+      - "4000:4000"
+    environment:
+      DB_URL: postgres://postgres:password@postgres:5432/finin
+      JWT_SECRET: mysecret
+``
