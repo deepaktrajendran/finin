@@ -1,4 +1,4 @@
-name: Build Microservices CI
+name: Build & Push Docker Images
 
 on:
   push:
@@ -13,20 +13,43 @@ jobs:
       - name: ✅ Checkout Code
         uses: actions/checkout@v3
 
-      - name: ✅ Build Auth Service
-        run: docker build -t finin-auth ./services/auth-service
+      # ✅ Login to DockerHub
+      - name: ✅ Docker Login
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
-      - name: ✅ Build User Service
-        run: docker build -t finin-user ./services/user-service
+      # ✅ Auth Service
+      - name: ✅ Auth Service
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/finin-auth ./services/auth-service
+          docker push ${{ secrets.DOCKER_USERNAME }}/finin-auth
 
-      - name: ✅ Build Portfolio Service
-        run: docker build -t finin-portfolio ./services/portfolio-service
+      # ✅ User Service
+      - name: ✅ User Service
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/finin-user ./services/user-service
+          docker push ${{ secrets.DOCKER_USERNAME }}/finin-user
 
-      - name: ✅ Build Notification Service
-        run: docker build -t finin-notification ./services/notification-service
+      # ✅ Portfolio Service
+      - name: ✅ Portfolio Service
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/finin-portfolio ./services/portfolio-service
+          docker push ${{ secrets.DOCKER_USERNAME }}/finin-portfolio
 
-      - name: ✅ Build API Gateway
-        run: docker build -t finin-gateway ./services/api-gateway
+      # ✅ Notification Service
+      - name: ✅ Notification Service
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/finin-notification ./services/notification-service
+          docker push ${{ secrets.DOCKER_USERNAME }}/finin-notification
 
-      - name: ✅ Build Frontend
-        run: docker build -t finin-frontend ./frontend
+      # ✅ API Gateway
+      - name: ✅ API Gateway
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/finin-gateway ./services/api-gateway
+          docker push ${{ secrets.DOCKER_USERNAME }}/finin-gateway
+
+      # ✅ Frontend
+      - name: ✅ Frontend
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/finin-frontend ./frontend
+          docker push ${{ secrets.DOCKER_USERNAME }}/finin-frontend
