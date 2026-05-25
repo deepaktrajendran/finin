@@ -6,52 +6,61 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const { Pool } = require("pg");
 const Redis = require("ioredis");
-const redis = new Redis("redis://127.0.0.1:6379");
-
 
 const app = express();
 app.use(express.json());
 app.use(cors());
-// Database connection
 
+// ✅ ✅ FIXED REDIS CONNECTION
+const redis = new Redis({
+  host: process.env.REDIS_HOST || "redis-service",
+  port: process.env.REDIS_PORT || 6379,
+});
+
+redis.on("connect", () => {
+  console.log("✅ Connected to Redis");
+});
+
+redis.on("error", (err) => {
+  console.error("❌ Redis Error:", err);
+});
+
+// ✅ DATABASE CONNECTION
 const pool = new Pool({
   connectionString: process.env.DB_URL,
 });
 
-
-// Test route
+// ✅ Test route
 app.get("/", (req, res) => {
   res.send("Auth Service Running ✅");
 });
 
-// Signup API
+// ✅ Signup API
 app.post("/signup", async (req, res) => {
   try {
     const { email, password } = req.body;
 
     const hash = await bcrypt.hash(password, 10);
 
-    
-  await pool.query(
-  "INSERT INTO users (email, password) VALUES ($1, $2)",
-  [email, hash]
-);
+    await pool.query(
+      "INSERT INTO users (email, password) VALUES ($1, $2)",
+      [email, hash]
+    );
 
-// ✅ Publish event to Redis
-  await redis.publish(
-  "user-events",
-  `New user signed up: ${email}`
-);
+    // ✅ Publish event to Redis
+    await redis.publish(
+      "user-events",
+      `New user signed up: ${email}`
+    );
 
-res.send("User created ✅");
-
+    res.send("User created ✅");
   } catch (err) {
     console.error(err);
     res.status(500).send("Error creating user");
   }
 });
 
-// Login API
+// ✅ Login API
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -86,7 +95,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Start server
+// ✅ Start server
 app.listen(4000, () => {
   console.log("Auth Service running on port 4000 🚀");
 });
