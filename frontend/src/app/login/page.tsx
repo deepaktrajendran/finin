@@ -17,28 +17,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 
-export default function SignupPage() {
+export default function LoginPage() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      await API.post("/auth/signup", {
+      const res = await API.post("/auth/login", {
         email,
         password,
       });
 
-      alert("Signup successful ✅");
-      router.push("/login");
+      localStorage.setItem("token", res.data.token);
+      alert("Login successful ✅");
+      router.push("/dashboard");
     } catch (err) {
       console.error(err);
-      alert("Signup failed ❌");
+      alert("Login failed ❌");
     } finally {
       setIsLoading(false);
     }
@@ -67,15 +68,15 @@ export default function SignupPage() {
             </div>
             <div className="space-y-1">
               <CardTitle className="text-2xl font-bold text-[#2C4869]">
-                Create an Account
+                Welcome to FININ
               </CardTitle>
               <CardDescription className="text-[#64748b]">
-                Join FININ to start building your portfolio
+                Enter your details to access your portfolio
               </CardDescription>
             </div>
           </CardHeader>
 
-          <form onSubmit={handleSignup}>
+          <form onSubmit={handleLogin}>
             <CardContent className="space-y-4 px-8">
               <Input
                 type="email"
@@ -95,15 +96,15 @@ export default function SignupPage() {
 
             <CardFooter className="flex flex-col gap-3 px-8 pb-8 pt-4">
               <Button type="submit" className="w-full h-12 bg-[#1D70B8] hover:bg-[#155A96] text-white font-medium" disabled={isLoading}>
-                {isLoading ? "Creating account..." : "Sign Up"}
+                {isLoading ? "Signing in..." : "Sign In"}
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 className="w-full h-12 text-[#1D70B8] hover:bg-[#F0F4F8] hover:text-[#155A96]"
-                onClick={() => router.push("/login")}
+                onClick={() => router.push("/signup")}
               >
-                Already have an account? Log In
+                Create an account
               </Button>
             </CardFooter>
           </form>

@@ -99,9 +99,9 @@ export default function DashboardPage() {
         {notifications.slice(0, 3).map((msg, index) => (
           <div
             key={index}
-            className="bg-black text-white px-4 py-2 rounded shadow-lg"
+            className="bg-white border border-[#E0E4E8] text-[#333] px-4 py-3 rounded-lg shadow-lg font-medium text-sm flex items-center"
           >
-            {msg}
+            <span className="mr-2">🔔</span> {msg}
           </div>
         ))}
       </div>
@@ -110,10 +110,10 @@ export default function DashboardPage() {
       <div className="space-y-8">
 
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="text-3xl font-bold tracking-tight text-[#2C4869]">
             Dashboard
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-[#64748b]">
             Welcome back! Here's your real portfolio.
           </p>
         </div>
@@ -122,16 +122,16 @@ export default function DashboardPage() {
         <div className="grid gap-6 md:grid-cols-2">
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1 }}>
-            <Card className="bg-gradient-to-br from-card to-card/50 border-border">
+            <Card className="bg-white border-[#E0E4E8] shadow-sm">
               <CardHeader className="flex justify-between">
-                <CardTitle className="text-sm text-muted-foreground">
+                <CardTitle className="text-sm font-bold text-[#1D70B8]">
                   Total Portfolio Value
                 </CardTitle>
-                <Wallet className="h-4 w-4" />
+                <Wallet className="h-4 w-4 text-[#1D70B8]" />
               </CardHeader>
 
               <CardContent>
-                <div className="text-4xl font-bold">
+                <div className="text-4xl font-bold text-[#333]">
                   ₹{totalValue.toLocaleString()}
                 </div>
               </CardContent>
@@ -140,15 +140,15 @@ export default function DashboardPage() {
 
           {/* ✅ BUY BUTTON */}
           <motion.div animate={{ opacity: 1 }}>
-            <Card>
+            <Card className="bg-white border-[#E0E4E8] shadow-sm">
               <CardHeader>
-                <CardTitle>Quick Action</CardTitle>
+                <CardTitle className="text-sm font-bold text-[#1D70B8]">Quick Action</CardTitle>
               </CardHeader>
 
               <CardContent>
                 <button
                   onClick={buyStock}
-                  className="bg-yellow-500 text-black px-4 py-2 rounded"
+                  className="bg-[#1D70B8] hover:bg-[#155A96] text-white px-4 py-2 rounded font-medium transition-colors"
                 >
                   Buy AAPL
                 </button>
@@ -159,9 +159,9 @@ export default function DashboardPage() {
         </div>
 
         {/* ✅ PORTFOLIO TABLE */}
-        <Card>
+        <Card className="bg-white border-[#E0E4E8] shadow-sm">
           <CardHeader>
-            <CardTitle>Your Holdings</CardTitle>
+            <CardTitle className="text-[#1D70B8]">Your Holdings</CardTitle>
           </CardHeader>
 
           <CardContent>

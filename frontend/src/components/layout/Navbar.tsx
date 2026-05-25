@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 
 export function Navbar() {
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border bg-background px-6">
+    <header className="flex h-16 items-center justify-between border-b border-[#E0E4E8] bg-white px-6">
       <div className="flex flex-1 items-center gap-4">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
