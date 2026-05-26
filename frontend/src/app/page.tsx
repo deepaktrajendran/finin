@@ -5,41 +5,6 @@ import { useRouter } from "next/navigation";
 import { Search, ChevronRight, Settings, Info, TrendingUp } from "lucide-react";
 import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-// --- Mock Data ---
-const tickerData = [
-  { name: "Sensex", value: "58,920.35", change: "245.65", percent: "0.42%", isUp: true },
-  { name: "Nifty", value: "17,350.25", change: "82.10", percent: "0.48%", isUp: false },
-  { name: "Dow Jones", value: "34,200.67", change: "210.59", percent: "0.62%", isUp: true },
-  { name: "Nasdaq", value: "14,256.78", change: "150.18", percent: "1.06%", isUp: false },
-];
-
-const globalIndices = [
-  { name: "Dow Jones", value: "34,200.67", change: "210.59", isUp: true },
-  { name: "NASDAQ", value: "14,256.78", change: "150.18", isUp: false },
-  { name: "FTSE", value: "7,980.45", change: "45.32", isUp: true },
-  { name: "Hang Seng", value: "20,350.40", change: "182.60", isUp: true },
-];
-
-const watchlist = [
-  { name: "Reliance", value: "2,450.75", percent: "1.2%", isUp: true },
-  { name: "TCS", value: "3,450.50", percent: "4.5%", isUp: false },
-  { name: "HDFC", value: "2,655.30", percent: "0.8%", isUp: true },
-  { name: "Maruti", value: "8,350.40", percent: "0.9%", isUp: true },
-];
-
-const topMarketNews = [
-  { title: "RBI Policy Update: Key Takeaways from the Latest Meeting", img: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=100&h=100&fit=crop" },
-  { title: "Tech Stocks Rally as Earnings Beat Expectations", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=100&h=100&fit=crop" },
-  { title: "Global Markets Mixed Amid Inflation Concerns", img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=100&h=100&fit=crop" },
-  { title: "Crude Oil Prices Surge on Supply Issues", img: "https://images.unsplash.com/photo-1613521140785-e85e427f8002?q=80&w=100&h=100&fit=crop" },
-];
-
-const businessNews = [
-  { title: "Inflation Fears Rise as Economic Pressures Hit Record High", img: "https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?q=80&w=300&h=200&fit=crop" },
-  { title: "Electric Vehicle Sales Set To Boom in 2024", img: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=300&h=200&fit=crop" },
-  { title: "India's GDP Growth Forecast Revised Upward", img: "https://images.unsplash.com/photo-1477959858617-67f851d5f3e1?q=80&w=300&h=200&fit=crop" },
-];
-
 // Mock chart data representing candlesticks roughly via a bar chart 
 const chartData = Array.from({ length: 40 }).map((_, i) => {
   const base = 200 + Math.random() * 50;
@@ -64,9 +29,22 @@ const aiChartData = Array.from({ length: 20 }).map((_, i) => ({
 export default function HomePage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [marketData, setMarketData] = useState<any>({ indices: [], stocks: [] });
+  const [newsData, setNewsData] = useState<any>({ topMarketNews: [], businessNews: [] });
 
   useEffect(() => {
     setMounted(true);
+    
+    // Fetch Live Data
+    fetch('/api/market-data')
+      .then(res => res.json())
+      .then(data => setMarketData(data))
+      .catch(console.error);
+
+    fetch('/api/news')
+      .then(res => res.json())
+      .then(data => setNewsData(data))
+      .catch(console.error);
   }, []);
 
   if (!mounted) return null;
@@ -75,7 +53,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-[#F0F4F8] text-[#333] font-sans overflow-x-hidden pb-12">
       
       {/* --- HEADER --- */}
-      <header className="bg-gradient-to-r from-[#B4D6F1] to-[#D0E4F5] border-b border-[#A6C8E6]">
+      <header className="bg-gradient-to-r from-[#B4D6F1] to-[#D0E4F5] border-b border-[#A6C8E6] relative z-20">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="flex items-center justify-between h-14">
             
@@ -103,73 +81,125 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* --- TICKER --- */}
-      <div className="bg-[#F8F9FA] border-b border-[#E0E4E8] text-xs py-2 shadow-sm">
-        <div className="container mx-auto px-4 lg:px-8 flex items-center space-x-6 overflow-x-auto whitespace-nowrap">
-          {tickerData.map((item, i) => (
-            <div key={i} className="flex items-center space-x-2">
+      {/* --- TICKER (SCROLLING MARQUEE) --- */}
+      <div className="bg-[#F8F9FA] border-b border-[#E0E4E8] text-xs py-2 shadow-sm overflow-hidden relative z-10">
+        <div className="whitespace-nowrap flex animate-marquee">
+          {(marketData.indices || []).concat(marketData.stocks || []).map((item: any, i: number) => (
+            <div key={i} className="inline-flex items-center space-x-2 mx-8">
               <span className="font-semibold text-[#555]">{item.name}</span>
-              <span className="font-bold">{item.value}</span>
+              <span className="font-bold">{item.price?.toFixed(2)}</span>
               <span className={`flex items-center ${item.isUp ? 'text-[#28A745]' : 'text-[#DC3545]'}`}>
-                {item.isUp ? '▲' : '▼'} {item.change} ({item.percent})
+                {item.isUp ? '▲' : '▼'} {item.change?.toFixed(2)} ({item.percentChange?.toFixed(2)}%)
               </span>
-              {i !== tickerData.length - 1 && <span className="text-gray-300 ml-4">|</span>}
+            </div>
+          ))}
+          {/* Duplicate for seamless scrolling */}
+          {(marketData.indices || []).concat(marketData.stocks || []).map((item: any, i: number) => (
+            <div key={`dup-${i}`} className="inline-flex items-center space-x-2 mx-8">
+              <span className="font-semibold text-[#555]">{item.name}</span>
+              <span className="font-bold">{item.price?.toFixed(2)}</span>
+              <span className={`flex items-center ${item.isUp ? 'text-[#28A745]' : 'text-[#DC3545]'}`}>
+                {item.isUp ? '▲' : '▼'} {item.change?.toFixed(2)} ({item.percentChange?.toFixed(2)}%)
+              </span>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Custom Styles for Marquee */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes marquee {
+          0% { transform: translateX(0%); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+          animation: marquee 30s linear infinite;
+          width: fit-content;
+        }
+        .animate-marquee:hover {
+          animation-play-state: paused;
+        }
+      `}} />
 
       {/* --- MAIN LAYOUT --- */}
       <main className="container mx-auto px-4 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr_300px] gap-6">
           
           {/* ================= LEFT COLUMN ================= */}
-          <div className="space-y-6">
+          <div className="space-y-6 flex flex-col">
             
-            {/* Top Market News */}
-            <div className="bg-white border border-[#E0E4E8] rounded shadow-sm">
+            {/* Top Market News (MOVED TO TOP) */}
+            <div className="bg-white border border-[#E0E4E8] rounded shadow-sm order-1">
               <div className="flex items-center justify-between p-3 border-b border-[#E0E4E8]">
                 <h2 className="text-[#1D70B8] font-bold text-sm">Top Market News</h2>
                 <ChevronRight className="w-4 h-4 text-[#1D70B8]" />
               </div>
               <div className="divide-y divide-[#F0F2F5]">
-                {topMarketNews.map((news, i) => (
-                  <div key={i} className="flex items-start p-3 hover:bg-[#F8F9FA] cursor-pointer transition-colors">
+                {newsData.topMarketNews?.length > 0 ? newsData.topMarketNews.map((news: any, i: number) => (
+                  <a key={i} href={news.link} target="_blank" rel="noopener noreferrer" className="flex items-start p-3 hover:bg-[#F8F9FA] cursor-pointer transition-colors">
                     <img src={news.img} alt="Thumbnail" className="w-14 h-14 object-cover rounded mr-3 flex-shrink-0" />
-                    <p className="text-xs font-medium text-[#333] leading-snug hover:text-[#1D70B8]">{news.title}</p>
-                  </div>
-                ))}
+                    <div className="flex flex-col">
+                       <p className="text-xs font-medium text-[#333] leading-snug hover:text-[#1D70B8] line-clamp-3">{news.title}</p>
+                       <span className="text-[10px] text-gray-400 mt-1">{new Date(news.time).toLocaleTimeString()}</span>
+                    </div>
+                  </a>
+                )) : (
+                  <div className="p-4 text-center text-xs text-gray-400">Loading Live News...</div>
+                )}
               </div>
             </div>
 
             {/* Global Indices */}
-            <div className="bg-white border border-[#E0E4E8] rounded shadow-sm overflow-hidden">
+            <div className="bg-white border border-[#E0E4E8] rounded shadow-sm overflow-hidden order-2">
               <div className="flex items-center justify-between p-3 bg-[#4A90E2] text-white">
-                <h2 className="font-bold text-sm">Global Indices</h2>
+                <h2 className="font-bold text-sm">Global Indices (Live)</h2>
                 <ChevronRight className="w-4 h-4 text-white" />
               </div>
               <div className="divide-y divide-[#F0F2F5]">
-                {globalIndices.map((item, i) => (
+                {marketData.indices?.length > 0 ? marketData.indices.map((item: any, i: number) => (
                   <div key={i} className="flex items-center justify-between p-3 hover:bg-[#F8F9FA] cursor-pointer text-sm">
                     <span className="text-[#555]">{item.name}</span>
                     <div className="flex items-center space-x-2">
-                      <span className="font-bold text-[#333]">{item.value}</span>
+                      <span className="font-bold text-[#333]">{item.price?.toFixed(2)}</span>
                       <span className={`text-xs flex items-center ${item.isUp ? 'text-[#28A745]' : 'text-[#DC3545]'}`}>
-                        {item.isUp ? '▲' : '▼'} {item.change}
+                        {item.isUp ? '▲' : '▼'} {item.change?.toFixed(2)}
                       </span>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="p-4 text-center text-xs text-gray-400">Loading Indices...</div>
+                )}
               </div>
             </div>
 
           </div>
 
           {/* ================= CENTER COLUMN ================= */}
-          <div className="space-y-6 overflow-hidden">
+          <div className="space-y-6 overflow-hidden flex flex-col">
             
-            {/* Chart Card */}
-            <div className="bg-white border border-[#E0E4E8] rounded shadow-sm">
+            {/* Latest Business News (MOVED TO TOP) */}
+            <div className="bg-white border border-[#E0E4E8] rounded shadow-sm order-1">
+              <div className="flex items-center justify-between p-3 border-b border-[#E0E4E8]">
+                <h2 className="text-[#1D70B8] font-bold text-sm">Latest Business News</h2>
+                <ChevronRight className="w-4 h-4 text-[#1D70B8]" />
+              </div>
+              <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {newsData.businessNews?.length > 0 ? newsData.businessNews.map((news: any, i: number) => (
+                  <a key={i} href={news.link} target="_blank" rel="noopener noreferrer" className="cursor-pointer group block">
+                    <div className="overflow-hidden rounded mb-2 h-24">
+                       <img src={news.img} alt="News" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300" />
+                    </div>
+                    <h3 className="text-xs font-bold text-[#2C4869] group-hover:text-[#1D70B8] leading-tight line-clamp-2">{news.title}</h3>
+                    <span className="text-[10px] text-gray-400 mt-1 block">{new Date(news.time).toLocaleTimeString()}</span>
+                  </a>
+                )) : (
+                  <div className="col-span-3 p-4 text-center text-xs text-gray-400">Loading Live News...</div>
+                )}
+              </div>
+            </div>
+
+            {/* Chart Card (MOVED TO BOTTOM) */}
+            <div className="bg-white border border-[#E0E4E8] rounded shadow-sm order-2">
               
               {/* Card Header (Blue) */}
               <div className="bg-[#1D70B8] text-white p-4 rounded-t flex flex-col md:flex-row md:items-center justify-between relative overflow-hidden">
@@ -179,8 +209,9 @@ export default function HomePage() {
                     </svg>
                  </div>
                  <div className="z-10 flex flex-col md:flex-row md:items-center gap-2 md:gap-6">
-                   <h2 className="text-lg font-bold">Sensex 58,920.35 <span className="text-[#4CD964] text-sm ml-1">▲ 245.65 (0.42%)</span></h2>
-                   <h2 className="text-lg font-bold">Nifty 17,350.25 <span className="text-[#FF3B30] text-sm ml-1">▼ 82.10 (0.48%)</span></h2>
+                   {marketData.indices?.slice(0,2).map((idx: any, i: number) => (
+                     <h2 key={i} className="text-lg font-bold">{idx.name} {idx.price?.toFixed(2)} <span className={`${idx.isUp ? 'text-[#4CD964]' : 'text-[#FF3B30]'} text-sm ml-1`}>{idx.isUp ? '▲' : '▼'} {idx.change?.toFixed(2)} ({idx.percentChange?.toFixed(2)}%)</span></h2>
+                   ))}
                  </div>
               </div>
 
@@ -230,24 +261,6 @@ export default function HomePage() {
                       </Bar>
                     </BarChart>
                  </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Latest Business News */}
-            <div className="bg-white border border-[#E0E4E8] rounded shadow-sm">
-              <div className="flex items-center justify-between p-3 border-b border-[#E0E4E8]">
-                <h2 className="text-[#1D70B8] font-bold text-sm">Latest Business News</h2>
-                <ChevronRight className="w-4 h-4 text-[#1D70B8]" />
-              </div>
-              <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {businessNews.map((news, i) => (
-                  <div key={i} className="cursor-pointer group">
-                    <div className="overflow-hidden rounded mb-2 h-24">
-                       <img src={news.img} alt={news.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300" />
-                    </div>
-                    <h3 className="text-xs font-bold text-[#2C4869] group-hover:text-[#1D70B8] leading-tight">{news.title}</h3>
-                  </div>
-                ))}
               </div>
             </div>
 
@@ -302,21 +315,23 @@ export default function HomePage() {
             {/* Watchlist */}
             <div className="bg-white border border-[#E0E4E8] rounded shadow-sm">
                <div className="flex items-center justify-between p-3 border-b border-[#E0E4E8]">
-                <h2 className="text-[#1D70B8] font-bold text-sm">Watchlist</h2>
+                <h2 className="text-[#1D70B8] font-bold text-sm">Watchlist (Live)</h2>
                 <ChevronRight className="w-4 h-4 text-[#1D70B8]" />
               </div>
               <div className="divide-y divide-[#F0F2F5]">
-                {watchlist.map((item, i) => (
+                {marketData.stocks?.length > 0 ? marketData.stocks.map((item: any, i: number) => (
                   <div key={i} className="flex items-center justify-between p-3 hover:bg-[#F8F9FA] cursor-pointer text-sm">
                     <span className="text-[#555]">{item.name}</span>
                     <div className="flex items-center space-x-2">
-                      <span className="font-bold text-[#333]">{item.value}</span>
+                      <span className="font-bold text-[#333]">{item.price?.toFixed(2)}</span>
                       <span className={`text-xs flex items-center ${item.isUp ? 'text-[#28A745]' : 'text-[#DC3545]'}`}>
-                        {item.isUp ? '▲' : '▼'} {item.percent}
+                        {item.isUp ? '▲' : '▼'} {item.percentChange?.toFixed(2)}%
                       </span>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="p-4 text-center text-xs text-gray-400">Loading Stocks...</div>
+                )}
               </div>
             </div>
 
